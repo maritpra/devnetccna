@@ -1,4 +1,4 @@
-#/usr/bin/python3
+#!/usr/bin/python3
 
 class Router:
     def __init__(self, model, swversion, ipaddr):
@@ -18,9 +18,3 @@ class Switch(Router):
             f' Software Version      :{self.swversion}\n'\
             f' Switch MGMT           :{self.ipaddr}'
         return desc
-
-rtr1 = Router('iosV', '15.6.7', '10.10.0.1')
-sw1 = Switch('Cat9300', '16.9.5', '10.10.10.2')
-
-print('Rtr1\n', rtr1.getdesc(), '\n')
-print('Sw1\n', sw1.getdesc(), '\n')
