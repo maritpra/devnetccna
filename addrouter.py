@@ -8,8 +8,7 @@ if addmore == 'yes':
     hostname = input("\nWhat is device name? ")
     ip = input("What is device ip address? ")
     location = input("What is the location? ")
-    router = [hostname, location, ip]
+    router = [hostname, ip, location]
     with open("routerlist.csv", "a") as data:
         csv_writer = csv.writer(data)
         csv_writer.writerow(router)
-        
