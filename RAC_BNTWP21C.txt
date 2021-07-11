@@ -1,0 +1,1062 @@
+
+!
+! Last configuration change at 19:59:07 THA Thu May 6 2021 by thitapat
+! NVRAM config last updated at 19:59:08 THA Thu May 6 2021 by thitapat
+!
+version 15.6
+service nagle
+no service pad
+service tcp-keepalives-in
+service tcp-keepalives-out
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service internal
+service sequence-numbers
+no service dhcp
+service unsupported-transceiver
+no platform punt-keepalive disable-kernel-core
+platform bfd-debug-trace 1
+platform xconnect load-balance-hash-algo mac-ip-instanceid
+platform qos-mark cos 4 vlanid 100 ipaddress 10.122.8.56
+platform tcam-parity-error enable
+platform tcam-threshold alarm-frequency 1
+platform shell
+platform reload immediate
+!
+hostname RAC_BNTWP21C
+!
+boot-start-marker
+boot system bootflash:asr920igp-universalk9.03.18.04.SP.156-2.SP4-ext.bin
+boot-end-marker
+!
+!
+vrf definition Mgmt-intf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!
+logging buffered 64000 informational
+logging persistent url bootflash:/Ciscodebug size 20480000 filesize 1024000
+enable secret 5 $1$G7q5$VVKsRz1IRNi/WNcdSbpDn1
+!
+aaa new-model
+!
+!
+aaa authentication login default group tacacs+ local
+aaa authentication login mgmt local
+aaa authentication login eem_policy none
+aaa authorization config-commands
+aaa authorization exec default group tacacs+ if-authenticated 
+aaa authorization exec mgmt local 
+aaa authorization exec eem_policy none 
+aaa authorization commands 0 default group tacacs+ if-authenticated 
+aaa authorization commands 0 mgmt local 
+aaa authorization commands 0 eem_policy none 
+aaa authorization commands 1 default group tacacs+ if-authenticated 
+aaa authorization commands 1 mgmt local 
+aaa authorization commands 1 eem_policy none 
+aaa authorization commands 15 default group tacacs+ if-authenticated 
+aaa authorization commands 15 mgmt local 
+aaa authorization commands 15 eem_policy none 
+aaa accounting send stop-record authentication failure
+aaa accounting exec default start-stop group tacacs+
+aaa accounting exec mgmt none
+aaa accounting commands 1 default stop-only group tacacs+
+aaa accounting commands 1 mgmt none
+aaa accounting commands 15 default stop-only group tacacs+
+aaa accounting commands 15 mgmt none
+!
+!
+!
+!
+!
+aaa session-id common
+ethernet cfm ieee 
+ethernet cfm global
+ethernet cfm traceroute cache
+ethernet cfm traceroute cache hold-time 60
+ethernet cfm domain 4 level 0
+ service rep port
+  continuity-check
+  continuity-check interval 3.3ms
+  efd notify rep
+!
+ethernet cfm logging
+process cpu threshold type total rising 80 interval 5 falling 55 interval 5
+clock timezone THA 7 0
+facility-alarm critical exceed-action shutdown
+port-channel load-balance-hash-algo src-dst-mac
+no ip source-route
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+no ip bootp server
+
+no ip domain lookup
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+rep admin vlan 10
+!
+!
+!
+!
+multilink bundle-name authenticated
+license feature ptp
+license udi pid ASR-920-12SZ-IM-CC sn CAT2147U5AU
+license boot level advancedmetroipaccess
+archive
+ log config
+  logging enable
+!
+!
+spanning-tree mode mst
+spanning-tree mst 0 priority 61440
+sdm prefer default 
+!
+username ais privilege 15 secret 5 $1$gU2S$W/51sWM.HMjq5rv7T1nXS0
+username prime privilege 15 secret 5 $1$Ls/Q$q91NJXs6klhbeProA0SA./
+username nec privilege 15 secret 5 $1$WgFS$Ac.4ZNt8xjPgVQlvrlqae1
+!
+redundancy
+!
+!
+!
+!
+!
+transceiver type all
+ monitoring
+cdp run
+!
+ip tcp synwait-time 10
+ip telnet tos 80
+lldp run
+!
+!
+class-map match-any CM-REALTIME-DSCP
+ match dscp cs5  ef  cs6  cs7 
+ match dscp cs4  af41  af42  af43 
+class-map match-any CM-NONREALTIME-COS
+ match cos  2 
+class-map match-any CM-CORPORATE-COS
+ match cos  1 
+class-map match-any CM-Telecom-OAM
+ match cos  4 
+class-map match-any CM-GROUP4
+ match qos-group 4
+class-map match-any CM-NETCONTROL-COS
+ match cos  6  7 
+class-map match-any CM-GROUP5
+ match qos-group 5
+class-map match-any CM-IPTV-COS
+ match cos  3 
+class-map match-any CM-GROUP6
+ match qos-group 6
+ match dscp cs6  cs7 
+class-map match-any CM-NONREALTIME-DSCP
+ match dscp cs2  af21  af22  af23 
+ match dscp cs1  af11  af12  af13 
+ match dscp cs3  af31  af32  af33 
+class-map match-any CM-GROUP1
+ match qos-group 1
+class-map match-any CM-GROUP2
+ match qos-group 2
+class-map match-any CM-GROUP3
+ match qos-group 3
+class-map match-all CM-GROUP-99
+ match qos-group 99
+class-map match-any CM-EXP5
+ match mpls experimental topmost 5 
+class-map match-any CM-REALTIME-COS
+ match cos  5 
+!
+policy-map PM-INGRESS-UNI-NODEB
+ class CM-REALTIME-DSCP
+  set qos-group 5
+  set cos 5
+ class CM-NONREALTIME-DSCP
+  set qos-group 2
+  set cos 2
+policy-map PM-EGRESS-UNI-1G
+ class CM-GROUP-99
+ class class-default
+  bandwidth percent 100 
+  queue-limit percent 20
+policy-map PM-INGRESS-UNI-IPCBB
+ class class-default
+  set qos-group 1
+  set cos 1
+policy-map PM-EGRESS-NNI
+ class CM-GROUP6
+  bandwidth remaining percent 5 
+ class CM-GROUP5
+  priority percent 25
+ class CM-GROUP4
+  bandwidth remaining percent 5 
+ class CM-GROUP3
+  bandwidth remaining percent 10 
+ class CM-GROUP2
+  bandwidth remaining percent 40 
+ class CM-GROUP1
+  bandwidth remaining percent 10 
+ class class-default
+  bandwidth remaining percent 5 
+policy-map PM-INGRESS-UNI-FBB-DATA
+ class class-default
+  set qos-group 0
+  set cos 0
+policy-map PM-EGRESS-DEFAULT-DTN
+ class CM-GROUP-99
+ class class-default
+  queue-limit percent 10
+policy-map PM-EGRESS-UNI-NODEB-DTN-100
+ class class-default
+  shape average 100000000   
+   service-policy PM-EGRESS-DEFAULT-DTN
+policy-map PM-INGRESS-NETCONTROL-COS
+ class class-default
+  set qos-group 6
+  set cos 6
+policy-map PM-EGRESS-UNI-NODEB-DTN-50
+ class class-default
+  shape average 50000000   
+   service-policy PM-EGRESS-DEFAULT-DTN
+policy-map PM-INGRESS-NNI
+ class CM-EXP5
+  set qos-group 5
+ class CM-NETCONTROL-COS
+  set qos-group 6
+ class CM-REALTIME-COS
+  set qos-group 5
+ class CM-Telecom-OAM
+  set qos-group 4
+ class CM-IPTV-COS
+  set qos-group 3
+ class CM-NONREALTIME-COS
+  set qos-group 2
+ class CM-CORPORATE-COS
+  set qos-group 1
+ class class-default
+policy-map PM-INGRESS-UNI-NODEB-DTN-50
+ class class-default
+  police cir 50000000
+   service-policy PM-INGRESS-UNI-NODEB
+policy-map PM-INGRESS-UNI-NODEB-DTN-100
+ class class-default
+  police cir 100000000
+   service-policy PM-INGRESS-UNI-NODEB
+policy-map PM-INGRESS-NNI-TDM
+ class class-default
+  set qos-group 5
+  set cos 5
+policy-map PM-INGRESS-UNI-FBB-VOICE
+ class class-default
+  set qos-group 5
+  set cos 5
+policy-map PM-INGRESS-UNI-DEFAULT
+ class class-default
+  set cos 0
+policy-map PM-EGRESS-UNI-NODEB
+ class CM-GROUP5
+  priority percent 25
+ class CM-GROUP2
+  bandwidth remaining percent 40 
+  queue-limit percent 20
+ class class-default
+  bandwidth remaining percent 30 
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Port-channel1
+ description TDM service
+ mtu 9000
+ no ip address
+ logging event link-status
+ load-interval 30
+ carrier-delay msec 0
+ negotiation auto
+ service instance 100 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 100
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NETCONTROL-COS
+  bridge-domain 100
+ !
+ service instance 103 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 103
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NETCONTROL-COS
+  bridge-domain 103
+ !
+ service instance 151 ethernet
+  description TDM-E1_WT
+  encapsulation dot1q 151
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NNI-TDM
+  bridge-domain 151
+ !
+ service instance 152 ethernet
+  description TDM-E1_PT
+  encapsulation dot1q 152
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NNI-TDM
+  bridge-domain 152
+ !
+ service instance 158 ethernet
+  description Connected to Rectifier_oam
+  encapsulation dot1q 158
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NNI-TDM
+  bridge-domain 158
+ !
+ service instance 160 ethernet
+  description Connected to Rectifier_oam
+  encapsulation dot1q 160
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-NNI-TDM
+  bridge-domain 160
+ !
+!
+interface Port-channel4
+ description Connected to SBN switch (IPCBB-AISWiFi)(/0/0/4)
+ no ip address
+ load-interval 30
+ negotiation auto
+ service instance 131 ethernet
+  description IPCBB_BASE_OAM_C004
+  encapsulation dot1q 131
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 131
+ !
+ service instance 132 ethernet
+  description IPCBB_CUST_OAM_C004
+  encapsulation dot1q 132
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 132
+ !
+ service instance 1862 ethernet
+  description IPCBB_BKK-C004-1862
+  encapsulation dot1q 1862
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 1862
+ !
+!
+interface GigabitEthernet0/0/0
+ description To_RAC_BNTWP01C_901
+ mtu 9000
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type rj45
+ negotiation auto
+ synchronous mode
+ cdp enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy output PM-EGRESS-NNI
+ channel-group 1 mode active
+!
+interface GigabitEthernet0/0/1
+ description Mobile BNTWP
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy output PM-EGRESS-UNI-NODEB
+ service instance 21 ethernet
+  encapsulation untagged
+  l2protocol peer ptppd
+  bridge-domain 21
+ !
+ service instance 211 ethernet
+  description gsm 
+  encapsulation dot1q 211
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 211
+ !
+ service instance 311 ethernet
+  description 3G2100HW_Iub(BPL1)
+  encapsulation dot1q 311
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 311
+ !
+ service instance 321 ethernet
+  description 3G2100HW_OAM
+  encapsulation dot1q 321
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 321
+ !
+ service instance 411 ethernet
+  description lte_service for eNodeB
+  encapsulation dot1q 411
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 411
+ !
+ service instance 412 ethernet
+  description lte_service for eNodeB#2
+  encapsulation dot1q 412
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 412
+ !
+!
+interface GigabitEthernet0/0/2
+ description Mobile BNTWP_D1
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy output PM-EGRESS-UNI-NODEB
+ service instance 22 ethernet
+  encapsulation untagged
+  l2protocol peer ptppd
+  bridge-domain 22
+ !
+ service instance 211 ethernet
+  description gsm 
+  encapsulation dot1q 211
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 211
+ !
+ service instance 311 ethernet
+  description 3G2100HW_Iub(BPL1)
+  encapsulation dot1q 311
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 311
+ !
+ service instance 321 ethernet
+  description 3G2100HW_OAM
+  encapsulation dot1q 321
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 321
+ !
+ service instance 411 ethernet
+  description lte_service for eNodeB
+  encapsulation dot1q 411
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 411
+ !
+ service instance 412 ethernet
+  description lte_service for eNodeB#2
+  encapsulation dot1q 412
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-NODEB
+  bridge-domain 412
+ !
+!
+interface GigabitEthernet0/0/3
+ no ip address
+ logging event link-status
+ load-interval 30
+ shutdown
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+!
+interface GigabitEthernet0/0/4
+ description Connected to IPCBB_BaseSwitch
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy output PM-EGRESS-UNI-1G
+ service instance 8 ethernet
+  description IPCBB_BKK-004-4008
+  encapsulation dot1q 4008
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 4008
+ !
+ service instance 131 ethernet
+  description IPCBB_BASE_OAM
+  encapsulation dot1q 131
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 131
+ !
+ service instance 132 ethernet
+  description IPCBB_CUST_OAM_vlan132
+  encapsulation dot1q 132
+  rewrite ingress tag pop 1 symmetric
+  service-policy input PM-INGRESS-UNI-IPCBB
+  bridge-domain 132
+ !
+!
+interface GigabitEthernet0/0/5
+ no ip address
+ logging event link-status
+ load-interval 30
+ shutdown
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+!
+interface GigabitEthernet0/0/6
+ description smart_site
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy input PM-INGRESS-UNI-DEFAULT
+ service instance 155 ethernet
+  description smart_site
+  encapsulation untagged
+  bridge-domain 155
+ !
+!
+interface GigabitEthernet0/0/7
+ no ip address
+ logging event link-status
+ load-interval 30
+ shutdown
+ media-type rj45
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+!
+interface GigabitEthernet0/0/8
+ description To RAC_BNTWP07C Gi0/1
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type sfp
+ negotiation auto
+ synchronous mode
+ cdp enable
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy input PM-INGRESS-NNI
+ service-policy output PM-EGRESS-NNI
+ service instance 103 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 103
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 103
+ !
+ service instance 151 ethernet
+  description TDM-E1_WT
+  encapsulation dot1q 151
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 151
+ !
+ service instance 152 ethernet
+  description TDM-E1_PT
+  encapsulation dot1q 152
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 152
+ !
+ service instance 160 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 160
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 160
+ !
+!
+interface GigabitEthernet0/0/9
+ description To RAC_BNTWP06C Gi0/1
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type sfp
+ negotiation auto
+ synchronous mode
+ cdp enable
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy input PM-INGRESS-NNI
+ service-policy output PM-EGRESS-NNI
+ service instance 103 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 103
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 103
+ !
+ service instance 151 ethernet
+  description TDM-E1_WT
+  encapsulation dot1q 151
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 151
+ !
+ service instance 152 ethernet
+  description TDM-E1_PT
+  encapsulation dot1q 152
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 152
+ !
+ service instance 160 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 160
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 160
+ !
+!
+interface GigabitEthernet0/0/10
+ description To RAC_BNTWP02C Gi0/1
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type sfp
+ negotiation auto
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service instance 100 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 100
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 100
+ !
+ service instance 103 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 103
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 103
+ !
+ service instance 151 ethernet
+  description TDM-E1_WT
+  encapsulation dot1q 151
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 151
+ !
+ service instance 152 ethernet
+  description TDM-E1_PT
+  encapsulation dot1q 152
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 152
+ !
+ service instance 158 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 158
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 158
+ !
+ service instance 160 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 160
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 160
+ !
+!
+interface GigabitEthernet0/0/11
+ description To RAC_BNTWP03C Gi0/1
+ no ip address
+ logging event link-status
+ load-interval 30
+ media-type sfp
+ negotiation auto
+ synchronous mode
+ cdp enable
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ service-policy input PM-INGRESS-NNI
+ service-policy output PM-EGRESS-NNI
+ service instance 103 ethernet
+  description 901_TDM_MGMT
+  encapsulation dot1q 103
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 103
+ !
+ service instance 151 ethernet
+  description TDM-E1_WT
+  encapsulation dot1q 151
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 151
+ !
+ service instance 152 ethernet
+  description TDM-E1_PT
+  encapsulation dot1q 152
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 152
+ !
+ service instance 158 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 158
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 158
+ !
+ service instance 160 ethernet
+  description Rectifier_oam
+  encapsulation dot1q 160
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain 160
+ !
+!
+interface TenGigabitEthernet0/0/12
+ description C004_RAC_BNTWP21C-RAC_PYMHP21C
+ mtu 9000
+ no ip address
+ logging event link-status
+ load-interval 30
+ carrier-delay msec 0
+ rep segment 4
+ synchronous mode
+ cdp enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ ethernet cfm mep domain 4 mpid 1056 service rep
+   continuity-check static rmep
+   rmep mpid 2060
+ service-policy input PM-INGRESS-NNI
+ service-policy output PM-EGRESS-NNI
+ service instance 1 ethernet
+  encapsulation untagged
+  l2protocol peer cdp loam esmc ptppd
+  bridge-domain 12
+ !
+ service instance trunk 12 ethernet
+  encapsulation dot1q 10,100,103,127,131-132,139,151-152,155,158,160,201-202,211,250,257,260,290,298-299,311,321,411,450,491,501,504,511,969,1104,1862,1918,3457-3458,3733,3878,4008,4016
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain from-encapsulation
+ !
+!
+interface TenGigabitEthernet0/0/13
+ description C004_RAC_BNTWP21C-RAC_MSUAM21C
+ mtu 9000
+ no ip address
+ logging event link-status
+ load-interval 30
+ carrier-delay msec 0
+ rep segment 4 preferred
+ synchronous mode
+ cdp enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+ ethernet cfm mep domain 4 mpid 2056 service rep
+   alarm notification all
+   continuity-check static rmep
+   rmep mpid 1057
+ service-policy input PM-INGRESS-NNI
+ service-policy output PM-EGRESS-NNI
+ service instance 1 ethernet
+  encapsulation untagged
+  l2protocol peer cdp loam esmc ptppd
+  bridge-domain 13
+ !
+ service instance trunk 13 ethernet
+  encapsulation dot1q 10,100,103,127,131-132,139,151-152,155,158,160,201-202,211,250,257,260,290,298-299,311,321,411,450,491,501,504,511,969,1104,1862,1918,3457-3458,3733,3878,4008,4016
+  rewrite ingress tag pop 1 symmetric
+  bridge-domain from-encapsulation
+ !
+!
+interface TenGigabitEthernet0/0/14
+ no ip address
+ load-interval 30
+ shutdown
+ no negotiation auto
+ cdp enable
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+!
+interface TenGigabitEthernet0/0/15
+ no ip address
+ load-interval 30
+ shutdown
+ no negotiation auto
+ cdp enable
+ spanning-tree bpdufilter enable
+ ethernet oam link-monitor frame window 600
+ ethernet oam link-monitor frame threshold low 2
+ ethernet oam link-monitor receive-crc window 600
+ ethernet oam link-monitor receive-crc threshold low 2
+ ethernet oam
+!
+interface GigabitEthernet0
+ vrf forwarding Mgmt-intf
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface BDI100
+ description REP Ring Cisco OAM
+ ip address 10.122.8.56 255.255.255.240
+!
+ip local policy route-map LOCAL_POLICY
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+ip tftp source-interface BDI100
+ip tacacs source-interface BDI100
+ip ssh rsa keypair-name ais_sshkeys
+ip ssh version 2
+ip ssh dscp 32
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip route 0.0.0.0 0.0.0.0 10.122.8.49
+!
+ip access-list standard Prime_List
+ permit 10.130.80.226
+ permit 10.130.80.227
+ permit 10.15.248.105
+ permit 10.15.248.104
+ permit 10.15.248.101
+ permit 10.15.248.103
+ permit 10.15.248.102
+ permit 10.122.7.0 0.0.0.15
+ permit 10.122.7.16 0.0.0.15
+ip access-list standard login
+ permit 10.15.248.107
+ permit 10.15.248.106
+ permit 10.15.248.99
+ permit 10.15.248.98
+ permit 10.122.7.0 0.0.0.255
+ permit 10.122.4.0 0.0.0.255
+ permit 10.122.8.0 0.0.7.255
+ permit 10.122.16.0 0.0.15.255
+ permit 10.122.32.0 0.0.7.255
+ permit 10.122.40.0 0.0.7.255
+ permit 10.122.0.0 0.0.255.255
+ip access-list standard mgmt-servers
+ permit 10.122.7.0 0.0.0.255
+!
+ip access-list extended BFD-ACL
+ permit udp any any eq 3784
+ permit udp any any eq 3785
+ip access-list extended LOCAL_TRAFFIC
+ permit ip any any
+!
+logging alarm major
+logging facility syslog
+logging source-interface BDI100
+logging host 10.122.7.7
+logging host 10.122.7.12
+logging host 10.122.7.19
+!
+route-map LOCAL_POLICY permit 10
+ match ip address LOCAL_TRAFFIC
+ set ip precedence immediate
+!
+snmp-server community IPRAN#SBN RO Prime_List
+snmp-server community BKK_IPRAN#SBN RW Prime_List
+snmp-server trap-source BDI100
+snmp-server ip dscp 32
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps config-copy
+snmp-server enable traps config
+snmp-server enable traps ipsla
+snmp-server enable traps syslog
+snmp-server enable traps ether-oam
+snmp-server enable traps memory bufferpeak
+snmp-server enable traps entity-state
+snmp-server enable traps entity
+snmp-server enable traps cpu threshold
+snmp-server enable traps rep
+snmp-server enable traps entity-sensor
+snmp-server enable traps resource-policy
+snmp-server enable traps flash insertion
+snmp-server enable traps flash removal
+snmp-server enable traps bulkstat collection transfer
+snmp-server enable traps mac-notification
+snmp-server enable traps transceiver all
+snmp-server host 10.122.7.19 version 2c community 
+snmp-server host 10.122.7.7 version 2c community 
+snmp ifmib ifindex persist
+snmp mib persist cbqos
+!
+tacacs-server host 10.122.7.11
+tacacs-server host 10.122.7.22
+tacacs-server key 7 06070E28455D1A5D
+!
+!
+!
+control-plane
+!
+banner login CCCC
+
+******************************************************************
+*  This secured system is for the use of authorized users only.  *
+*  Unauthorized access is strictly prohibited!                   *
+*  All activities on this system may be logged / monitored.      *
+******************************************************************
+
+Hostname: $(hostname)
+
+
+!
+line con 0
+ password 7 1513021F
+ logging synchronous
+ stopbits 1
+line aux 0
+ stopbits 1
+line vty 0 4
+ exec-timeout 5 0
+ authorization commands 0 eem_policy
+ authorization commands 1 eem_policy
+ authorization commands 15 eem_policy
+ authorization exec eem_policy
+ login authentication eem_policy
+ transport preferred none
+ transport input none
+ transport output none
+line vty 5 14
+ access-class login in
+ exec-timeout 5 0
+ password 7 104F000A
+line vty 15
+ access-class mgmt-servers in
+ exec-timeout 5 0
+ password 7 094D471A
+ authorization commands 0 mgmt
+ authorization commands 1 mgmt
+ authorization commands 15 mgmt
+ authorization exec mgmt
+ accounting commands 1 mgmt
+ accounting commands 15 mgmt
+ accounting exec mgmt
+ login authentication mgmt
+ rotary 25
+ transport input telnet ssh
+!
+exception crashinfo buffersize 128
+
+network-clock revertive 
+network-clock synchronization automatic
+network-clock synchronization mode QL-enabled
+network-clock input-source 1 interface TenGigabitEthernet0/0/12
+network-clock input-source 2 interface TenGigabitEthernet0/0/13
+esmc process
+tod-clock input-source 1 internal
+ntp source BDI100
+ntp server 10.122.4.34 prefer
+ntp server 10.122.4.35
+!
+ptp clock boundary domain 24 hybrid  
+ clock-port DY-1 profile g8275.1 local-priority 129
+  transport ethernet multicast interface Te0/0/12 
+ clock-port DY-2 profile g8275.1 local-priority 130
+  transport ethernet multicast interface Te0/0/13 
+ clock-port GI_0/0/1 master profile g8275.1
+  transport ethernet multicast interface Gi0/0/1 
+ clock-port GI_0/0/2 master profile g8275.1
+  transport ethernet multicast interface Gi0/0/2 
+!
+!
+gnss slot R0
+ shutdown
+!
+!
+
+event manager environment _cron_entry 00 01 * * 1      
+event manager directory user policy "bootflash:/"
+event manager session cli username "event_manager_user"
+no event manager policy Mandatory.dualrate_eem_policy.tcl type system
+event manager applet enable_macflap_notify
+ event timer countdown time 300
+ action 1 cli command "enable"
+ action 2 cli command "config t"
+ action 3 cli command "mac-flap-syslog enable"
+ action 4 syslog msg "MAC-FLAP-NOTIFY feature enabled"
+event manager policy dualrate_eem_policy.tcl type user
+!
+end
